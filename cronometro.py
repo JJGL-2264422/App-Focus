@@ -1,10 +1,10 @@
-import time
 import psutil
 import tkinter as tk
 import win32gui as wui
 import win32process as winp
 
 active = True
+programas = ["Code.exe", "Spotify.exe"]
 
 #Código de Ventana Arrastrable creado por James Kent
 class Grip:
@@ -49,20 +49,29 @@ class Grip:
 
 def update():
     global startTime, winCode, timer, AppName, ScoreL
+    working = False
     winCode = winp.GetWindowThreadProcessId(wui.GetForegroundWindow()) #Toma el código de la aplicación activa
-    winName = psutil.Process(winCode[-1]).name() #Toma el nombre de la aplicación a partir del código
-    winTitle = winp.GetWindowThreadProcessId(wui.GetForegroundWindow()) #Debug - Toma el título de la ventana activa
-    timer.title(winTitle)
-    AppName.configure(text=f"AppCode: {winName}") #Debug
-    if(winName == 'Code.exe'): #Cambiar por la lista de procesos enlazados a la tarea
-        startTime += 1
-        seconds = startTime % 60
-        minutes = int(startTime / 60) % 60
-        hours = int(startTime / 3600)
-        ScoreL.configure(text=f"{hours:02}:{minutes:02}:{seconds:02}",bg='lightgreen') #Cambia el color a verde mientras está activo
-    else: #Cambia el color del fondo a rojo si está inactivo
-        ScoreL.configure(bg='#f54257')
-    timer.after(1000, update)
+    try:
+        winName = psutil.Process(winCode[-1]).name() #Toma el nombre de la aplicación a partir del código
+        for i in range(0,len(programas)):
+            if winName == programas[i]:
+                working = True
+
+        AppName.configure(text=f"AppCode: {winName}") #Debug
+        if(working): #Cambiar por la lista de procesos enlazados a la tarea
+            startTime += 1
+            seconds = startTime % 60
+            minutes = int(startTime / 60) % 60
+            hours = int(startTime / 3600)
+            ScoreL.configure(text=f"{hours:02}:{minutes:02}:{seconds:02}",bg='lightgreen') #Cambia el color a verde mientras está activo
+        else: #Cambia el color del fondo a rojo si está inactivo
+            ScoreL.configure(bg='#f54257')
+        timer.after(1000, update)
+    except:
+        winCode = winName = ""
+        timer.after(5,update)
+
+    
 
             
 
