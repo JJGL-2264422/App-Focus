@@ -2,6 +2,11 @@ import tkinter as tk
 from tkinter import messagebox
 import json
 import os
+import requests
+from flask import Flask, request, redirect, render_template_string
+import threading
+import webbrowser
+from queue import Queue
 
 #JSON
 DATA_FILE = 'usuarios.json'
@@ -63,6 +68,150 @@ def iniciar_sesion():
     else:
         messagebox.showerror("Error", "Usuario o contraseña incorrectos.")
 
+#Inicio por facebook
+facebook_login_result = Queue()
+def iniciar_facebook():
+    threading.Thread(target=run_flask_server, daemon=True).start()
+    threading.Timer(1.5, lambda: webbrowser.open('http://localhost:5000')).start()
+    ventana_principal.after(100, revisar_loginface)
+
+def revisar_loginface():
+    if not facebook_login_result.empty():
+        nombre = facebook_login_result.get()
+        if nombre:
+            ventana_login.destroy()
+            ventana_principal.withdraw()
+            mostrar_bienvenida(nombre)
+        else:
+            messagebox.showerror("Error", "No se pudo iniciar sesión con Facebook.")
+    else:
+        ventana_principal.after(100, revisar_loginface)
+
+#Servidor Flask (Facebook)
+app = Flask(__name__)
+
+APP_ID = '1012742923698078'
+APP_SECRET = '5615105aef5e25aa87825af75daa55ec'
+REDIRECT_URI = 'http://localhost:5000/callback'
+
+@app.route('/')
+def loginface():
+    auth_url = f'https://www.facebook.com/v18.0/dialog/oauth?client_id={APP_ID}&redirect_uri={REDIRECT_URI}&scope=public_profile'
+    return redirect(auth_url)
+
+@app.route('/callback')
+def callback():
+    code = request.args.get('code')
+    if not code:
+        facebook_login_result.put(None)
+        return "Error: No se recibió el código de autorización.", 400
+
+    token_url = 'https://graph.facebook.com/v18.0/oauth/access_token'
+    params = {
+        'client_id': APP_ID,
+        'redirect_uri': REDIRECT_URI,
+        'client_secret': APP_SECRET,
+        'code': code
+    }
+
+    token_response = requests.get(token_url, params=params)
+    token_data = token_response.json()
+    access_token = token_data.get('access_token')
+
+    if not access_token:
+        facebook_login_result.put(None)
+        return "Error obteniendo el token.", 400
+
+    profile_url = f'https://graph.facebook.com/v18.0/me?access_token={access_token}&fields=name'
+    profile_response = requests.get(profile_url)
+
+    if profile_response.status_code == 200:
+        name = profile_response.json().get("name", "Usuario")
+        facebook_login_result.put(name)
+    else:
+        facebook_login_result.put(None)
+        return "Error al obtener el perfil.", 400
+    return "Inicio de sesión exitoso. Puedes cerrar esta pestaña."
+
+def run_flask_server():
+    app.run(port=5000)
+
+#Inicio por Google
+google_login_result = Queue()
+def iniciar_google():
+    threading.Thread(target=run_flask, daemon=True).start()
+    threading.Timer(1.5, lambda: webbrowser.open('http://localhost:5000/google')).start()
+    ventana_principal.after(100, revisar_logingoogle)
+
+def revisar_logingoogle():
+    if not google_login_result.empty():
+        nombre = google_login_result.get()
+        if nombre:
+            ventana_login.destroy()
+            ventana_principal.withdraw()
+            mostrar_bienvenida(nombre)
+        else:
+            messagebox.showerror("Error", "No se pudo iniciar sesión con Google.")
+    else:
+        ventana_principal.after(100, revisar_logingoogle)
+
+#Servidor Flask (Google)
+app = Flask(__name__)
+
+GOOGLE_CLIENT_ID = '686823449348-u5bvf5bnfka4n6gmg28k0jb93d8uqq0r.apps.googleusercontent.com'
+GOOGLE_CLIENT_SECRET = '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'
+GOOGLE_REDIRECT_URI = 'http://localhost:5000/google/callback'
+GOOGLE_SCOPE = 'https://www.googleapis.com/auth/userinfo.profile'
+
+@app.route('/google')
+def logingoogle():
+    auth_url = (
+        f"https://accounts.google.com/o/oauth2/v2/auth?"
+        f"response_type=code&client_id={GOOGLE_CLIENT_ID}"
+        f"&redirect_uri={GOOGLE_REDIRECT_URI}&scope={GOOGLE_SCOPE}"
+    )
+    return redirect(auth_url)
+
+@app.route('/google/callback')
+def google_callback():
+    code = request.args.get('code')
+    if not code:
+        google_login_result.put(None)
+        return "Error: No se recibió código de autorización.", 400
+
+    token_url = 'https://oauth2.googleapis.com/token'
+    data = {
+        'code': code,
+        'client_id': GOOGLE_CLIENT_ID,
+        'client_secret': GOOGLE_CLIENT_SECRET,
+        'redirect_uri': GOOGLE_REDIRECT_URI,
+        'grant_type': 'authorization_code'
+    }
+
+    token_res = requests.post(token_url, data=data).json()
+    access_token = token_res.get('access_token')
+
+    if not access_token:
+        google_login_result.put(None)
+        return "Error al obtener el token.", 400
+
+    user_info = requests.get(
+        'https://www.googleapis.com/oauth2/v2/userinfo',
+        headers={'Authorization': f'Bearer {access_token}'}
+    )
+
+    if user_info.status_code == 200:
+        name = user_info.json().get("name", "Usuario")
+        google_login_result.put(name)
+    else:
+        google_login_result.put(None)
+        return "Error al obtener datos del perfil.", 400
+
+    return "Inicio de sesión exitoso. Puedes cerrar esta pestaña."
+
+def run_flask():
+    app.run(port=5000)
+
 # Ventanas
 
 # Ventana principal
@@ -94,6 +243,9 @@ def abrir_login():
     tk.Label(frame_login, text="Contraseña", font=("Arial", 20)).pack(pady=10)
     entry_contraseña_login = tk.Entry(frame_login, show="*", font=("Arial", 18), width=30)
     entry_contraseña_login.pack(pady=10)
+
+    tk.Button(frame_login, text="Iniciar con Facebook", font=("Arial", 16), bg="#3b5998", fg="white", width=25, command=iniciar_facebook).pack(pady=10)
+    tk.Button(frame_login, text="Iniciar con Google", font=("Arial", 16), bg="#db4a39", fg="white", width=25, command=iniciar_google).pack(pady=10)
 
     tk.Button(frame_login, text="Entrar", font=("Arial", 20), width=20, command=iniciar_sesion).pack(pady=30)
 
