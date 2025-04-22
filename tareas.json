@@ -1,17 +1,44 @@
 [
-    {
-        "nombre": "Besar a Juan",
-        "fecha": "2025-04-22",
-        "hora": "10:52:35"
-    },
-    {
-        "nombre": "Programar",
-        "fecha": "2025-04-22",
-        "hora": "10:53:32"
-    },
-    {
-        "nombre": "PDf",
-        "fecha": "2025-04-22",
-        "hora": "10:53:50"
-    }
+      {
+            "nombre": "Besar a Juan",
+            "fecha": "2025-04-22",
+            "hora": "10:52:35",
+            "horaObj": "3",
+            "programa": "Code.exe"
+      },
+      {
+            "nombre": "Programar",
+            "fecha": "2025-04-22",
+            "hora": "10:53:32",
+            "horaObj": "3",
+            "programa": "Code.exe"
+      },
+      {
+            "nombre": "PDf",
+            "fecha": "2025-04-22",
+            "hora": "10:53:50",
+            "horaObj": "3",
+            "programa": "Code.exe"
+      },
+      {
+            "nombre": "Escribir",
+            "fecha": "2025-04-22",
+            "hora": "11:35:08",
+            "horaObj": "3",
+            "programa": "Code.exe"
+      },
+      {
+            "nombre": "Leer",
+            "fecha": "2025-04-22",
+            "hora": "12:20:52",
+            "horaObj": "3",
+            "programa": "vivaldi.exe"
+      },
+      {
+            "nombre": "Revisar Codigo",
+            "fecha": "2025-04-22",
+            "hora": "13:04:00",
+            "horaObj": "6",
+            "programa": "code.exe"
+      }
 ]
