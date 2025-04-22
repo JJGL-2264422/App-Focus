@@ -8,6 +8,8 @@ import threading
 import webbrowser
 from queue import Queue
 
+import tarea
+
 #JSON
 DATA_FILE = 'usuarios.json'
 if not os.path.exists(DATA_FILE):
@@ -16,7 +18,7 @@ if not os.path.exists(DATA_FILE):
 
 # Funciones
 
-def mostrar_bienvenida(usuario):
+'''def mostrar_bienvenida(usuario):
     ventana_bienvenida = tk.Toplevel()
     ventana_bienvenida.title("Bienvenido")
     ventana_bienvenida.geometry("1200x800")
@@ -27,7 +29,7 @@ def mostrar_bienvenida(usuario):
     tk.Label(frame, text=f"¡Bienvenido, {usuario}!", font=("Arial", 32)).pack(pady=40)
     tk.Button(frame, text="Cerrar sesión", font=("Arial", 18), width=20,
               command=lambda: cerrar_sesion(ventana_bienvenida)).pack(pady=20)
-
+'''
 def cerrar_sesion(ventana_actual):
     ventana_actual.destroy()
     ventana_principal.deiconify()
@@ -63,8 +65,8 @@ def iniciar_sesion():
 
     if usuario in usuarios and usuarios[usuario] == contraseña:
         ventana_login.destroy()
-        ventana_principal.withdraw()
-        mostrar_bienvenida(usuario)
+        ventana_principal.destroy()
+        tarea.dashboard(usuario)
     else:
         messagebox.showerror("Error", "Usuario o contraseña incorrectos.")
 
@@ -80,8 +82,8 @@ def revisar_loginface():
         nombre = facebook_login_result.get()
         if nombre:
             ventana_login.destroy()
-            ventana_principal.withdraw()
-            mostrar_bienvenida(nombre)
+            ventana_principal.destroy()
+            tarea.dashboard(nombre)
         else:
             messagebox.showerror("Error", "No se pudo iniciar sesión con Facebook.")
     else:
@@ -148,8 +150,8 @@ def revisar_logingoogle():
         nombre = google_login_result.get()
         if nombre:
             ventana_login.destroy()
-            ventana_principal.withdraw()
-            mostrar_bienvenida(nombre)
+            ventana_principal.destroy()
+            tarea.dashboard(nombre)
         else:
             messagebox.showerror("Error", "No se pudo iniciar sesión con Google.")
     else:
