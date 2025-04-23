@@ -2,7 +2,9 @@ import tkinter as tk
 from tkinter import simpledialog, messagebox, ttk
 import json
 import os
+import subprocess
 from datetime import datetime
+
 #import login
 
 TAREAS_FILE = 'tareas.json'
@@ -26,6 +28,9 @@ def dashboard(usuario):
 
     btn_ver = tk.Button(frame, text="Ver tareas", command=mostrar_tareas, width=30, height=2)
     btn_ver.pack(pady=20)
+
+    btn_iniciar = tk.Button(frame, text="Iniciar tarea", command=iniciar_tarea, width=30, height=2)
+    btn_iniciar.pack(pady=20)
 
     root.mainloop()
 
@@ -87,13 +92,69 @@ def mostrar_tareas():
 
     tree.pack()
 
+def iniciar_tarea():
+    if not os.path.exists(TAREAS_FILE):
+        messagebox.showinfo("Sin tareas", "No hay tareas para iniciar")
+        return
+
+    with open(TAREAS_FILE, 'r') as f:
+        tareas = json.load(f)
+
+    nombres = [t["nombre"] for t in tareas]
+    seleccion = simpledialog.askstring("Iniciar tarea", f"Selecciona una tarea:\n{', '.join(nombres)}")
+
+    tarea = next((t for t in tareas if t["nombre"] == seleccion), None)
+
+    if not tarea:
+        messagebox.showerror("Error", "Tarea no encontrada")
+        return
+
+    entrada = {
+        "programa": tarea["programa"],
+        "nombre": tarea["nombre"]
+    }
+
+    with open("Entrada.json", "w") as f:
+        json.dump(entrada, f)
+
+    root.withdraw()
+    
+    subprocess.run(["python", "cronometro.py"])
+
+    root.deiconify()
+    
+    with open("salida.json", "r") as f:
+        salida = json.load(f)
+
+    tiemposalida = salida["tiempo"]
+    horas, minutos, segundos = map(int, tiemposalida.split(":"))
+    tiempo_total_salida = horas * 3600 + minutos * 60 + segundos
+
+    horasObj, minutosObj, segundosObj = map(int, tarea["horaObj"].split(":"))
+    tiempo_totalObj = horasObj * 3600 + minutosObj * 60 + segundosObj
+
+    tiempo_final = tiempo_totalObj - tiempo_total_salida
+
+    horas_final = tiempo_final // 3600
+    minutos_final = (tiempo_final % 3600) // 60
+    segundos_final = tiempo_final % 60
+
+    for t in tareas:
+        if t["nombre"] == seleccion:
+            t["horaObj"] = f"{horas_final:02}:{minutos_final:02}:{segundos_final:02}"
+            break
+
+    with open(TAREAS_FILE, 'w') as f:
+        json.dump(tareas, f,)
+
+    messagebox.showinfo("Cronómetro finalizado")
+
 # Crear tarea con input
 def crear_tarea():
     
     root.geometry("1200x800")
     nombre = simpledialog.askstring("Crear tarea", "Nombre de la tarea:")
-    horas = simpledialog.askstring("Crear tarea", "Horas que se desean trabajar:")
+    horas = simpledialog.askstring("Crear tarea", "Horas que se desean trabajar (HH:MM:SS):")
     programa = simpledialog.askstring("Crear tarea", "Programa a utilizar:")
     programa += ".exe"
     guardar_tarea(nombre, horas, programa)
-

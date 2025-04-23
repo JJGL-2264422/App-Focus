@@ -2,9 +2,16 @@ import psutil
 import tkinter as tk
 import win32gui as wui
 import win32process as winp
+import json
 
 active = True
-programas = ["Code.exe", "Spotify.exe"]
+try:
+    with open("entrada.json", "r") as f:
+        datos = json.load(f)
+        programas = [datos.get("programa", [])]
+        nombre = datos.get("nombre", "")
+except Exception as e:
+    print("Error al leer entrada.json:", e)
 
 #Código de Ventana Arrastrable creado por James Kent
 class Grip:
@@ -58,7 +65,7 @@ def update():
                 working = True
 
         AppName.configure(text=f"AppCode: {winName}") #Debug
-        if(working): #Cambiar por la lista de procesos enlazados a la tarea
+        if(working):
             startTime += 1
             seconds = startTime % 60
             minutes = int(startTime / 60) % 60
@@ -71,17 +78,11 @@ def update():
         winCode = winName = ""
         timer.after(5,update)
 
-    
-
-            
-
-# [!] Solo es necesario cambiar el color del label del tiempo, ya que abarca toda la ventana.
-
 def openTimer():
     global startTime, winCode, timer, AppName, ScoreL, active
     timer = tk.Tk()
     winCode = 0
-    startTime = 0 #Se cambia por el valor guardado de Total de horas trabajadas
+    startTime = 0
     seconds = startTime % 60
     minutes = int(startTime / 60) % 60
     hours = int(startTime / 3600)
@@ -99,4 +100,25 @@ def openTimer():
     grip = Grip(timer) #Hace arrastable la ventana del cronometro.
 
     timer.after(1000, update)
+    timer.bind("<Escape>", lambda e: [close(), timer.destroy()])
     timer.mainloop()
+
+def close():
+    global nombre, startTime
+
+    Time = startTime
+    hours = int(Time / 3600)
+    minutes = int(Time / 60) % 60
+    seconds = Time % 60
+    tiempo = f"{hours:02}:{minutes:02}:{seconds:02}"
+
+    salida = {
+        "nombre": nombre,
+        "tiempo": tiempo
+    }
+
+    with open("salida.json", "w") as f:
+        json.dump(salida, f)
+            
+openTimer()
+# [!] Solo es necesario cambiar el color del label del tiempo, ya que abarca toda la ventana.
