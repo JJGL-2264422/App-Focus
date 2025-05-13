@@ -4,6 +4,7 @@ import json
 import os
 import subprocess
 from datetime import datetime
+import requests
 
 #import login
 
@@ -51,28 +52,13 @@ def guardar_tarea(nombre, horaObj, programa):
         "programa": programa
     }
 
-    if os.path.exists(TAREAS_FILE):
-        with open(TAREAS_FILE, 'r') as f:
-            tareas = json.load(f)
-    else:
-        tareas = []
-
-    tareas.append(tarea)
-
-    with open(TAREAS_FILE, 'w') as f:
-        json.dump(tareas, f, indent=6)
+    r = requests.post("http://192.168.18.27:5080/Tareas", json=tarea)
 
     messagebox.showinfo("Tarea guardada", f"Tarea '{nombre}' guardada exitosamente")
 
 # Mostrar ventana con tabla de tareas
 def mostrar_tareas():
-    if not os.path.exists(TAREAS_FILE):
-        messagebox.showinfo("Sin tareas", "No hay tareas guardadas")
-        return
-
-    with open(TAREAS_FILE, 'r') as f:
-        tareas = json.load(f)
-
+    
     ventana_tareas = tk.Toplevel(root)
     ventana_tareas.title("Lista de tareas")
     ventana_tareas.geometry("1200x800")
@@ -82,6 +68,9 @@ def mostrar_tareas():
 
     columnas = ("Nombre", "Fecha", "Hora","Horas de Trabajo","Programa")
     tree = ttk.Treeview(frame, columns=columnas, show="headings", height=20)
+    
+    tareas = requests.get("http://192.168.18.27:5080/Tareas")
+    tareas = tareas.json()
 
     for col in columnas:
         tree.heading(col, text=col)
@@ -93,12 +82,9 @@ def mostrar_tareas():
     tree.pack()
 
 def iniciar_tarea():
-    if not os.path.exists(TAREAS_FILE):
-        messagebox.showinfo("Sin tareas", "No hay tareas para iniciar")
-        return
 
-    with open(TAREAS_FILE, 'r') as f:
-        tareas = json.load(f)
+    tareas = requests.get("http://192.168.18.27:5080/Tareas")
+    tareas = tareas.json()
 
     nombres = [t["nombre"] for t in tareas]
     seleccion = simpledialog.askstring("Iniciar tarea", f"Selecciona una tarea:\n{', '.join(nombres)}")
@@ -144,8 +130,7 @@ def iniciar_tarea():
             t["horaObj"] = f"{horas_final:02}:{minutos_final:02}:{segundos_final:02}"
             break
 
-    with open(TAREAS_FILE, 'w') as f:
-        json.dump(tareas, f,)
+    r = requests.put("http://192.168.18.27:5080/Tareas", json=tareas)
 
     messagebox.showinfo("Cronómetro finalizado")
 
