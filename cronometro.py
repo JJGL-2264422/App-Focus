@@ -3,6 +3,7 @@ import tkinter as tk
 import win32gui as wui
 import win32process as winp
 import json
+import requests
 
 active = True
 try:
@@ -117,8 +118,7 @@ def close():
         "tiempo": tiempo
     }
 
-    with open("salida.json", "w") as f:
-        json.dump(salida, f)
-            
+    r = requests.post("http://192.168.18.27:5080/SaveTime", json=salida)
+
 openTimer()
 # [!] Solo es necesario cambiar el color del label del tiempo, ya que abarca toda la ventana.
