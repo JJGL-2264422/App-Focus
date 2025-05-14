@@ -52,7 +52,7 @@ def guardar_tarea(nombre, horaObj, programa):
         "programa": programa
     }
 
-    r = requests.post("http://192.168.18.27:5080/Tareas", json=tarea)
+    r = requests.post("http://localhost:5000/Tareas", json=tarea)
 
     messagebox.showinfo("Tarea guardada", f"Tarea '{nombre}' guardada exitosamente")
 
@@ -69,7 +69,7 @@ def mostrar_tareas():
     columnas = ("Nombre", "Fecha", "Hora","Horas de Trabajo","Programa")
     tree = ttk.Treeview(frame, columns=columnas, show="headings", height=20)
     
-    tareas = requests.get("http://192.168.18.27:5080/Tareas")
+    tareas = requests.get("http://localhost:5000/Tareas")
     tareas = tareas.json()
 
     for col in columnas:
@@ -83,7 +83,7 @@ def mostrar_tareas():
 
 def iniciar_tarea():
 
-    tareas = requests.get("http://192.168.18.27:5080/Tareas")
+    tareas = requests.get("http://localhost:5000/Tareas")
     tareas = tareas.json()
 
     nombres = [t["nombre"] for t in tareas]
@@ -130,7 +130,7 @@ def iniciar_tarea():
             t["horaObj"] = f"{horas_final:02}:{minutos_final:02}:{segundos_final:02}"
             break
 
-    r = requests.put("http://192.168.18.27:5080/Tareas", json=tareas)
+    r = requests.put("http://localhost:5000/Tareas", json=tareas)
 
     messagebox.showinfo("Cronómetro finalizado")
 
