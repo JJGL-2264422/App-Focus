@@ -1,11 +1,10 @@
 import time
 import tkinter as tk
+import tkinter.font as tkFont
 from tkinter import messagebox
 import json
 import os
-import requests
 from flask import Flask, request, redirect, render_template_string
-import threading
 import webbrowser
 from queue import Queue
 import api_gateway
@@ -66,7 +65,6 @@ def iniciar_sesion():
         usuarios = json.load(f)
 
     if usuario in usuarios and usuarios[usuario] == contraseña:
-        ventana_login.destroy()
         ventana_principal.destroy()
         tarea.dashboard(usuario)
     else:
@@ -92,7 +90,6 @@ def verificar_login():
 
                 if nombre:
                     os.remove("info_usuario.json")
-                    ventana_login.destroy()
                     ventana_principal.destroy()
                     tarea.dashboard(nombre)
                     break
@@ -105,40 +102,37 @@ def verificar_login():
 
 # Ventanas
 
-# Ventana principal
+# Ventana principal / Inicio de sesión
 ventana_principal = tk.Tk()
-ventana_principal.title("Sistema de Usuarios")
-ventana_principal.geometry("1200x800")
+ventana_principal.title("Iniciar Sesión")
+ventana_principal.geometry("1000x600")
 
-frame_inicio = tk.Frame(ventana_principal)
-frame_inicio.place(relx=0.5, rely=0.5, anchor="center")
+frame_inicio = tk.Frame(ventana_principal,bg='#FAF5F0')
 
-tk.Label(frame_inicio, text="Bienvenido", font=("Arial", 36)).pack(pady=40)
-tk.Button(frame_inicio, text="Iniciar sesión", font=("Arial", 20), width=25, command=lambda: abrir_login()).pack(pady=20)
-tk.Button(frame_inicio, text="Registrarse", font=("Arial", 20), width=25, command=lambda: abrir_registro()).pack(pady=20)
+gradiente = tk.Canvas(ventana_principal, bg="#ED4319")
 
-# Ventana de login
-def abrir_login():
-    global ventana_login, entry_usuario_login, entry_contraseña_login
-    ventana_login = tk.Toplevel()
-    ventana_login.title("Iniciar sesión")
-    ventana_login.geometry("1200x800")
+frame_formulario = tk.Frame(frame_inicio,bg='#FAF5F0')
+tk.Label(frame_formulario, text="Iniciar Sesión", font=(tkFont.Font(family='Lexend',size='26',weight='bold') ),bg='#FAF5F0').pack(pady=10,anchor='w')
+tk.Label(frame_formulario, text="Email", font=(tkFont.Font(family='Lexend',size='12') ),bg='#FAF5F0').pack(anchor='w')
+entry_usuario_login = tk.Entry(frame_formulario, font=("Arial", 10), width=20)
+entry_usuario_login.pack(fill='x',pady=15)
 
-    frame_login = tk.Frame(ventana_login)
-    frame_login.place(relx=0.5, rely=0.5, anchor="center")
+tk.Label(frame_formulario, text="Contraseña", font=(tkFont.Font(family='Lexend',size='12') ),bg='#FAF5F0').pack(anchor='w')
+entry_contraseña_login = tk.Entry(frame_formulario, show="*", font=("Arial", 10), width=20)
+entry_contraseña_login.pack(fill='x',pady=5)
 
-    tk.Label(frame_login, text="Usuario", font=("Arial", 20)).pack(pady=10)
-    entry_usuario_login = tk.Entry(frame_login, font=("Arial", 18), width=30)
-    entry_usuario_login.pack(pady=10)
 
-    tk.Label(frame_login, text="Contraseña", font=("Arial", 20)).pack(pady=10)
-    entry_contraseña_login = tk.Entry(frame_login, show="*", font=("Arial", 18), width=30)
-    entry_contraseña_login.pack(pady=10)
+tk.Button(frame_formulario, text="Iniciar con Facebook", font=(tkFont.Font(family='Lexend',size='10',weight='bold') ), bg="#0866FF", fg="white", width=25, command=login_facebook).pack(fill='x',pady=10)
+tk.Button(frame_formulario, text="Iniciar con Google", font=(tkFont.Font(family='Lexend',size='10',weight='bold') ), bg="#DD4722", fg="white", width=25, command=login_google).pack(fill='x',pady=10)
 
-    tk.Button(frame_login, text="Iniciar con Facebook", font=("Arial", 16), bg="#3b5998", fg="white", width=25, command=login_facebook).pack(pady=10)
-    tk.Button(frame_login, text="Iniciar con Google", font=("Arial", 16), bg="#db4a39", fg="white", width=25, command=login_google).pack(pady=10)
+tk.Button(frame_formulario, text="Iniciar sesión", font=(tkFont.Font(family='Lexend',size='10',weight='bold') ), width=12, command=lambda: iniciar_sesion()).pack(side='left',pady=20)
+tk.Button(frame_formulario, text="Registrarse", font=(tkFont.Font(family='Lexend',size='10',weight='bold') ), width=12, command=lambda: abrir_registro()).pack(side='right',pady=20)
 
-    tk.Button(frame_login, text="Entrar", font=("Arial", 20), width=20, command=iniciar_sesion).pack(pady=30)
+frame_formulario.pack(fill='x',expand='true')
+frame_formulario.place(relx=0.5, rely=0.5, anchor="center")
+
+gradiente.pack(side='left',fill='both', expand='true')
+frame_inicio.pack(side='right',fill='both',expand='true')
 
 # Ventana de registro
 def abrir_registro():
@@ -161,4 +155,5 @@ def abrir_registro():
     tk.Button(frame_registro, text="Registrar", font=("Arial", 20), width=20, command=registrar_usuario).pack(pady=30)
 
 #esto la incia (importante xd)
+ventana_principal.configure(bg="#E20C0C")
 ventana_principal.mainloop()
