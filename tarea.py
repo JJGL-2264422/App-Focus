@@ -15,7 +15,7 @@ def dashboard(usuario):
     global root 
     root = tk.Tk()
     root.title("Bienvenido")
-    root.geometry("1200x800")
+    root.geometry("1000x600")
 
     frame = tk.Frame(root)
     frame.place(relx=0.5, rely=0.5, anchor="center")
@@ -61,7 +61,7 @@ def mostrar_tareas():
     
     ventana_tareas = tk.Toplevel(root)
     ventana_tareas.title("Lista de tareas")
-    ventana_tareas.geometry("1200x800")
+    ventana_tareas.geometry("1000x600")
 
     frame = tk.Frame(ventana_tareas)
     frame.place(relx=0.5, rely=0.5, anchor="center")
@@ -137,7 +137,7 @@ def iniciar_tarea():
 # Crear tarea con input
 def crear_tarea():
     
-    root.geometry("1200x800")
+    root.geometry("1000x600")
     nombre = simpledialog.askstring("Crear tarea", "Nombre de la tarea:")
     horas = simpledialog.askstring("Crear tarea", "Horas que se desean trabajar (HH:MM:SS):")
     programa = simpledialog.askstring("Crear tarea", "Programa a utilizar:")
