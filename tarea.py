@@ -105,7 +105,7 @@ def iniciar_tarea():
 
     root.withdraw()
     
-    subprocess.run(["python", "cronometro.py"])
+    subprocess.run(["myvenv/Scripts/python", "cronometro.py"])
 
     root.deiconify()
     
