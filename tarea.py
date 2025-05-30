@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import simpledialog, messagebox, ttk
+import tkinter.font as tkFont
 import json
 import os
 import subprocess
@@ -11,77 +12,192 @@ import requests
 TAREAS_FILE = 'tareas.json'
 
 # Ventana principal
-def dashboard(usuario):
-    global root 
-    root = tk.Tk()
-    root.title("Bienvenido")
-    root.geometry("1000x600")
+class VentanaPrincipal(tk.Tk):
+    def __init__(self,usuario,*arg,**kwargs):
+        tk.Tk.__init__(self, *arg,**kwargs)
+        self.geometry("1000x600")
+        self.configure(bg='#FAF5F0')
+        self.usuario = usuario
+        tk.Label(self, text=f"¡Bienvenido, {usuario}!",bg="#ED9119", font=(tkFont.Font(family='Lexend',size='24')),height=2).pack(side='top',fill='x')
 
-    frame = tk.Frame(root)
-    frame.place(relx=0.5, rely=0.5, anchor="center")
+        main_frame = tk.Frame(self, bg='#FAF5F0')
+        main_frame.pack(pady=20,side='top',fill='x')
+        
+        main_frame.grid_rowconfigure(0,weight=1)
+        main_frame.grid_columnconfigure(0,weight=1)
+        main_frame.grid_columnconfigure(1,weight=1)
+        main_frame.grid_columnconfigure(2,weight=1)
 
-    tk.Label(frame, text=f"¡Bienvenido, {usuario}!", font=("Arial", 32),height=2).pack(pady=40)
-    #tk.Button(frame, text="Cerrar sesión", font=("Arial", 18), width=20,
-    #          command=lambda: login.cerrar_sesion(root)).pack(pady=20)
+        btn_crear = tk.Button(main_frame, text="Crear tarea", command= lambda: self.show_frame("FrameCrear"), width=20, height=2)
+        btn_crear.grid(row=0,column=0,sticky='e')
 
-    btn_crear = tk.Button(frame, text="Crear tarea", command=crear_tarea, width=30, height=2)
-    btn_crear.pack(pady=20)
+        btn_ver = tk.Button(main_frame, text="Ver tareas", command= lambda: self.show_frame("FrameLista"), width=20, height=2)
+        btn_ver.grid(row=0,column=1)
 
-    btn_ver = tk.Button(frame, text="Ver tareas", command=mostrar_tareas, width=30, height=2)
-    btn_ver.pack(pady=20)
+        btn_iniciar = tk.Button(main_frame, text="Iniciar tarea", command= lambda: iniciar_tarea(self), width=20, height=2)
+        btn_iniciar.grid(row=0,column=2,sticky='w')
 
-    btn_iniciar = tk.Button(frame, text="Iniciar tarea", command=iniciar_tarea, width=30, height=2)
-    btn_iniciar.pack(pady=20)
 
-    root.mainloop()
+        contain = tk.Frame(self, bg='#FAF5F0')
+        contain.pack(padx=10,side = "top", fill = "both", expand = True) 
+
+        switch_frame = tk.Frame(contain,bg='#FAF5F0')
+        switch_frame.pack(padx=10,side = "top", fill = "both", expand = True) 
+        switch_frame.grid_rowconfigure(0, weight = 1)
+        switch_frame.grid_columnconfigure(0, weight = 1)
+        
+        self.frames = {}
+
+        frame_lista = FrameLista(switch_frame)
+        frame_crear = FrameCrear(switch_frame, frame_lista)
+
+        self.frames["FrameCrear"] = frame_crear
+        self.frames["FrameLista"] = frame_lista
+
+        for frame in (self.frames.values()):
+            frame.grid(row = 0, column = 0, sticky ="nswe")
+        
+        self.show_frame("FrameCrear")
+    
+    def show_frame(self, cont):
+        frame = self.frames[cont]
+        frame.tkraise()
 
 # Guardar tarea con fecha y hora actual
-def guardar_tarea(nombre, horaObj, programa):
-    if not nombre:
-        return
 
-    ahora = datetime.now()
-    fecha = ahora.strftime("%Y-%m-%d")
-    hora = ahora.strftime("%H:%M:%S")
 
-    tarea = {
-        "nombre": nombre,
-        "fecha": fecha,
-        "hora": hora,
-        "horaObj": horaObj,
-        "programa": programa
-    }
+# Crear tarea con input
+class FrameCrear(tk.Frame):
+    def __init__(self,parent,frame_lista):
+        tk.Frame.__init__(self,parent, bg='#FAF5F0')
+        self.frame_lista = frame_lista
 
-    r = requests.post("http://localhost:5000/Tareas", json=tarea)
+        main_frame = tk.Frame(self, bg='#FAF5F0')
+        main_frame.pack(pady=20,side='top',fill='x')
+        
+        main_frame.grid_rowconfigure(0,weight=1)
+        main_frame.grid_columnconfigure(0,weight=1)
+        main_frame.grid_columnconfigure(1,weight=2)
 
-    messagebox.showinfo("Tarea guardada", f"Tarea '{nombre}' guardada exitosamente")
+        input_frame = tk.Frame(main_frame,bg='#FAF5F0')
+        input_frame.grid(row=0,column=0,sticky='nse',padx=70)
+
+        lista_frame = tk.Frame(main_frame,bg='#FAF5F0')
+        lista_frame.grid(row=0,column=1,sticky='nswe')
+
+        input_frame.grid_rowconfigure(0,weight=1)
+        input_frame.grid_columnconfigure(0,weight=1)
+
+        tk.Label(input_frame, text="Nombre de la Tarea", font=(tkFont.Font(family='Lexend',size='12') ),bg='#FAF5F0').pack()
+        entry_nombre = tk.Entry(input_frame, font=("Arial", 10), width=40)
+        entry_nombre.pack(pady=15)
+
+        tk.Label(input_frame, text="Horas a trabajar (HH:MM:SS)", font=(tkFont.Font(family='Lexend',size='12') ),bg='#FAF5F0').pack()
+        entry_horas = tk.Entry(input_frame, font=("Arial", 10), width=40)
+        entry_horas.pack(pady=15)
+
+        tk.Label(input_frame, text="Programa a utilizar", font=(tkFont.Font(family='Lexend',size='12') ),bg='#FAF5F0').pack()
+        entry_program = tk.Entry(input_frame, font=("Arial", 10), width=40)
+        entry_program.pack(pady=5)
+        
+        tk.Button(input_frame, text="Crear Tarea", font=(tkFont.Font(family='Lexend',size='10',weight='bold') ), width=12, command= lambda: self.guardar_tarea( entry_nombre.get(), entry_nombre.get(), entry_nombre.get() ) ).pack(pady=20)
+
+        columnas = ("Nombre","Horas de Trabajo","Programa")
+        self.tree = ttk.Treeview(lista_frame, columns=columnas, show="headings", height=20)
+        
+        try:
+            tareas = requests.get("http://localhost:5000/Tareas")
+            tareas = tareas.json()
+
+            for col in columnas:
+                self.tree.heading(col, text=col)
+                self.tree.column(col, width=150, anchor="center")
+
+            for tarea in tareas:
+                self.tree.insert("", "end", values=(tarea['nombre'],tarea['horaObj'], tarea['programa']))
+        except Exception as e:
+            print("Error:", e)
+
+        self.tree.grid(row=0,column=0)
+
+    def guardar_tarea(self,nombre, horaObj, programa):
+        if not nombre:
+            return
+
+        ahora = datetime.now()
+        fecha = ahora.strftime("%Y-%m-%d")
+        hora = ahora.strftime("%H:%M:%S")
+
+        tarea = {
+            "nombre": nombre,
+            "fecha": fecha,
+            "hora": hora,
+            "horaObj": horaObj,
+            "programa": programa
+        }
+
+        r = requests.post("http://localhost:5000/Tareas", json=tarea)
+
+        self.actualizar_lista()
+
+        messagebox.showinfo("Tarea guardada", f"Tarea '{nombre}' guardada exitosamente")
+    
+    def actualizar_lista(self):
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+
+        tareas = requests.get("http://localhost:5000/Tareas")
+        tareas = tareas.json()
+
+        for tarea in tareas:
+            self.tree.insert("", "end", values=(tarea['nombre'],tarea['horaObj'], tarea['programa']))
+        
+        self.frame_lista.actualizar_al_crear(tareas)
+        self.update()
 
 # Mostrar ventana con tabla de tareas
-def mostrar_tareas():
+
+class FrameLista(tk.Frame):
+    def __init__(self,parent):
+        tk.Frame.__init__(self,parent, bg='#FAF5F0')
+
+        columnas = ("Nombre", "Fecha", "Hora","Horas de Trabajo","Programa")
+        self.tree = ttk.Treeview(self, columns=columnas, show="headings", height=20)
+        
+
+        for col in columnas:
+            self.tree.heading(col, text=col)
+            self.tree.column(col, width=150, anchor="center")
+
+        tareas = requests.get("http://localhost:5000/Tareas")
+        tareas = tareas.json()
+
+        for tarea in tareas:
+            self.tree.insert("", "end", values=(tarea['nombre'], tarea['fecha'], tarea['hora'], tarea['horaObj'], tarea['programa']))
+
+        self.tree.pack()
+
+    def actualizar_al_crear(self, datos):
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+
+
+        for tarea in datos:
+            self.tree.insert("", "end", values=(tarea['nombre'], tarea['fecha'], tarea['hora'], tarea['horaObj'], tarea['programa']))
+
+class TreeUpdater():
+    def __init__(self, treeview):
+        print("Acá en el inicio")
+        self.tree = treeview
+        self.update_tree()
     
-    ventana_tareas = tk.Toplevel(root)
-    ventana_tareas.title("Lista de tareas")
-    ventana_tareas.geometry("1000x600")
-
-    frame = tk.Frame(ventana_tareas)
-    frame.place(relx=0.5, rely=0.5, anchor="center")
-
-    columnas = ("Nombre", "Fecha", "Hora","Horas de Trabajo","Programa")
-    tree = ttk.Treeview(frame, columns=columnas, show="headings", height=20)
+    def update_tree(self):
+        print("Por aquí pasó")
+        
     
-    tareas = requests.get("http://localhost:5000/Tareas")
-    tareas = tareas.json()
-
-    for col in columnas:
-        tree.heading(col, text=col)
-        tree.column(col, width=200, anchor="center")
-
-    for tarea in tareas:
-        tree.insert("", "end", values=(tarea['nombre'], tarea['fecha'], tarea['hora'], tarea['horaObj'], tarea['programa']))
-
-    tree.pack()
-
-def iniciar_tarea():
+# Falta interfaz gráfica
+# No actualiza las listas de los frames
+def iniciar_tarea(self):
 
     tareas = requests.get("http://localhost:5000/Tareas")
     tareas = tareas.json()
@@ -103,11 +219,11 @@ def iniciar_tarea():
     with open("Entrada.json", "w") as f:
         json.dump(entrada, f)
 
-    root.withdraw()
+    self.withdraw()
     
     subprocess.run(["myvenv/Scripts/python", "cronometro.py"])
 
-    root.deiconify()
+    self.deiconify()
     
     with open("salida.json", "r") as f:
         salida = json.load(f)
@@ -133,13 +249,3 @@ def iniciar_tarea():
     r = requests.put("http://localhost:5000/Tareas", json=tareas)
 
     messagebox.showinfo("Cronómetro finalizado")
-
-# Crear tarea con input
-def crear_tarea():
-    
-    root.geometry("1000x600")
-    nombre = simpledialog.askstring("Crear tarea", "Nombre de la tarea:")
-    horas = simpledialog.askstring("Crear tarea", "Horas que se desean trabajar (HH:MM:SS):")
-    programa = simpledialog.askstring("Crear tarea", "Programa a utilizar:")
-    programa += ".exe"
-    guardar_tarea(nombre, horas, programa)
