@@ -58,7 +58,7 @@ def iniciar_sesion(user, password):
 
     if usuario in usuarios and usuarios[usuario] == contraseña:
         ventana_principal.destroy()
-        tarea.dashboard(usuario)
+        tarea.VentanaPrincipal(usuario)
     else:
         messagebox.showerror("Error", "Usuario o contraseña incorrectos.")
 
@@ -83,7 +83,7 @@ def verificar_login():
                 if nombre:
                     os.remove("info_usuario.json")
                     ventana_principal.destroy()
-                    tarea.dashboard(nombre)
+                    tarea.VentanaPrincipal(nombre)
                     break
 
             except Exception as e:
