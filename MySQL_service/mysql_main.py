@@ -42,20 +42,20 @@ async def consultar_tareas_por_dueño(dueño_tarea, bd:bd_dependency):
         HTTPException(status_code=404, detail="Tarea no encontrada")
     return tarea'''
 
-@app.delete("/borrar/{id_registro}", status_code=status.HTTP_200_OK)
-async def borrar_registro(id_registro, bd:bd_dependency):
-    registroborrar = bd.query(modelo.TareaSQL).filter(modelo.TareaSQL.idregistro==id_registro).first()
+@app.delete("/borrar/{id_tarea}", status_code=status.HTTP_200_OK)
+async def borrar_registro(id_tarea, bd:bd_dependency):
+    registroborrar = bd.query(modelo.TareaSQL).filter(modelo.TareaSQL.id_tarea==id_tarea).first()
     if registroborrar is None:
         HTTPException(status_code=404, detail="No se puede borrar o no existe la tarea")
     bd.delete(registroborrar)
     bd.commit()
     return "La tarea se elimino exitosamente"
 
-@app.post("/actualizar", status_code=status.HTTP_200_OK)
-async def actualizar_registro (registro:Tarea, bd:bd_dependency):
-     registroactualizar = bd.query(modelo.TareaSQL).filter(modelo.TareaSQL.idregistro==registro.idregistro).first()
+@app.post("/actualizarHora", status_code=status.HTTP_200_OK)
+async def actualizar_hora (horaObj, bd:bd_dependency):
+     registroactualizar = bd.query(modelo.TareaSQL).filter(modelo.TareaSQL.id_tarea==horaObj).first()
      if registroactualizar is None:
          HTTPException(status_code=404, detail="No se encuentra la tarea")
-     registroactualizar.horaObj = registro.horaObj
+     registroactualizar.horaObj = horaObj
      bd.commit()
      return "Tarea actualizada exitosamente"
