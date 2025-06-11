@@ -18,7 +18,7 @@ FACEBOOK_REDIRECT_URI = 'http://localhost:8003/facebook/callback'
 GOOGLE_CLIENT_ID = '686823449348-u5bvf5bnfka4n6gmg28k0jb93d8uqq0r.apps.googleusercontent.com'
 GOOGLE_CLIENT_SECRET = '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'
 GOOGLE_REDIRECT_URI = 'http://localhost:8003/google/callback'
-GOOGLE_SCOPE = 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email'
+GOOGLE_SCOPE = 'https://www.googleapis.com/auth/userinfo.profile'
 
 def create_access_token(data: dict, expires_delta: timedelta = timedelta(hours=1)):
     to_encode = data.copy()
@@ -29,7 +29,7 @@ def create_access_token(data: dict, expires_delta: timedelta = timedelta(hours=1
 def login_facebook():
     url = (
         f"https://www.facebook.com/v18.0/dialog/oauth?"
-        f"client_id={APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&scope=public_profile,email"
+        f"client_id={APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&scope=public_profile"
     )
     return RedirectResponse(url)
 
@@ -46,25 +46,22 @@ def callback_facebook(code: Optional[str] = None):
     }).json()
 
     access_token_fb = token_res.get('access_token')
-    profile = requests.get(f'https://graph.facebook.com/me?fields=name,email&access_token={access_token_fb}')
+    profile = requests.get(f'https://graph.facebook.com/me?fields=name&access_token={access_token_fb}')
     name = profile.json().get("name", "Usuario")
-    email = profile.json().get("email", "Correo@gmail.com")
 
     jwt_token = create_access_token({"sub": name})
 
     with open("../common/info_usuario.json", "w") as f:
         json.dump({
             "nombre": name,
-            "correo": email,
             "access_token": jwt_token
         }, f)
 
-        return {
-            "mensaje": "Inicio de sesión exitoso",
-            "nombre": name,
-            "correo": email,
-            "access_token": jwt_token
-        }
+    return {
+        "mensaje": "Inicio de sesión exitoso",
+        "nombre": name,
+        "access_token": jwt_token
+    }
 
 @app.get("/google")
 def login_google():
@@ -98,23 +95,20 @@ def callback_google(code: Optional[str] = None):
         'https://www.googleapis.com/oauth2/v2/userinfo',
         headers={'Authorization': f'Bearer {access_token_google}'}
     )
-
     name = user_info.json().get("name", "Usuario")
-    email = user_info.json().get("email", "correo@desconocido.com")
+
     jwt_token = create_access_token({"sub": name})
 
     with open("../common/info_usuario.json", "w") as f:
         json.dump({
             "nombre": name,
-            "correo": email,
-            "access_token": jwt_token,
-            "token_type": "bearer"
+            "access_token": jwt_token
+            ,"token_type": "bearer"
         }, f)
 
-        return {
-            "mensaje": "Inicio de sesión exitoso",
-            "nombre": name,
-            "correo": email,
-            "access_token": jwt_token,
-            "token_type": "bearer"
-        }
+    return {
+        "mensaje": "Inicio de sesión exitoso",
+        "nombre": name,
+        "access_token": jwt_token
+        ,"token_type": "bearer"
+    }
