@@ -7,15 +7,17 @@ import os
 from flask import Flask, request, redirect, render_template_string
 import webbrowser
 from queue import Queue
-import api_gateway
 
+import requests
 import tarea
 
-#JSON
-DATA_FILE = 'usuarios.json'
-if not os.path.exists(DATA_FILE):
-    with open(DATA_FILE, 'w') as f:
-        json.dump({}, f)
+API_URL = "http://localhost:8000"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+COMMON_DIR = os.path.join(BASE_DIR, "common")
+DATA_FILE = os.path.join(COMMON_DIR, "usuarios.json")
+INFO_FILE = os.path.join(COMMON_DIR, "info_usuario.json")
+TOKEN_FILE = os.path.join(COMMON_DIR, "token.jwt")
+
 
 # Funciones
 def cerrar_sesion(ventana_actual):
@@ -50,46 +52,59 @@ def registrar_usuario(user,password, repassword):
     return
 
 def iniciar_sesion(user, password):
-    usuario = user
-    contraseña = password
-
-    with open(DATA_FILE, 'r') as f:
-        usuarios = json.load(f)
-
-    if usuario in usuarios and usuarios[usuario] == contraseña:
-        ventana_principal.destroy()
-        tarea.VentanaPrincipal(usuario)
-    else:
-        messagebox.showerror("Error", "Usuario o contraseña incorrectos.")
+    try:
+        response = requests.post(f"{API_URL}/login", data={"username": user, "password": password})
+        if response.status_code == 200:
+            token = response.json().get("access_token")
+            with open(TOKEN_FILE, "w") as f:
+                f.write(token)
+            ventana_principal.destroy()
+            tarea.VentanaPrincipal(user)
+        else:
+            messagebox.showerror("Error", "Usuario o contraseña incorrectos.")
+    except Exception as e:
+        messagebox.showerror("Error", f"No se pudo conectar al servidor: {e}")
 
 
 def login_facebook():
-    webbrowser.open('http://localhost:5000/facebook')
+    webbrowser.open(f"{API_URL}/facebook")
     verificar_login()
 
-
 def login_google():
-    webbrowser.open('http://localhost:5000/google')
+    webbrowser.open(f"{API_URL}/google")
     verificar_login()
 
 def verificar_login():
-    while True:
-        if os.path.exists("info_usuario.json"):
+    def check():
+        if os.path.exists(INFO_FILE):
             try:
-                with open("info_usuario.json", "r") as f:
+                with open(INFO_FILE, "r") as f:
                     datos = json.load(f)
-                    nombre = datos.get("nombre")
+
+                if isinstance(datos, str):
+                    datos = json.loads(datos)
+
+                nombre = datos.get("nombre")
+                token = datos.get("access_token")
 
                 if nombre:
-                    os.remove("info_usuario.json")
+                    if token:
+                        with open(TOKEN_FILE, "w") as tf:
+                            tf.write(token)
+
+                    os.remove(INFO_FILE)
                     ventana_principal.destroy()
                     tarea.VentanaPrincipal(nombre)
-                    break
+                    return
 
             except Exception as e:
-                print("Error leyendo el nombre de usuario", e)
+                print("Error leyendo info_usuario.json:", e)
 
-        time.sleep(1)
+        ventana_principal.after(1000, check)
+
+    check()
+
+
 #Importante importar datetime para el time
 
 # Ventanas
@@ -142,7 +157,6 @@ class VentanaLogin(tk.Frame):
 
         tk.Button(frame_formulario, text="Iniciar con Facebook", font=(tkFont.Font(family='Lexend',size='10',weight='bold') ), bg="#0866FF", fg="white", width=25, command=login_facebook).pack(fill='x',pady=10)
         tk.Button(frame_formulario, text="Iniciar con Google", font=(tkFont.Font(family='Lexend',size='10',weight='bold') ), bg="#DD4722", fg="white", width=25, command=login_google).pack(fill='x',pady=10)
-
         tk.Button(frame_formulario, text="Iniciar sesión", font=(tkFont.Font(family='Lexend',size='10',weight='bold') ), width=12, command=lambda: iniciar_sesion(entry_usuario.get(),entry_contraseña.get())).pack(side='left',pady=20)
         tk.Button(frame_formulario, text="Registrarse", font=(tkFont.Font(family='Lexend',size='10',weight='bold') ), width=12, command=lambda: controller.show_frame(VentanaRegistro)).pack(side='right',pady=20)
 

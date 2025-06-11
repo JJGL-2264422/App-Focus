@@ -4,15 +4,28 @@ import win32gui as wui
 import win32process as winp
 import json
 import requests
+import os
+import sys
 
+
+BASE_DIR = os.path.dirname(__file__)
+COMMON_DIR = os.path.abspath(os.path.join(BASE_DIR, "common"))
+ENTRADA_FILE = os.path.join(COMMON_DIR, "Entrada.json")
+SALIDA_FILE = os.path.join(COMMON_DIR, "salida.json")
+TOKEN_FILE = os.path.join(BASE_DIR, "token.jwt")
+
+API_URL = "http://localhost:8000"
 active = True
+
 try:
-    with open("entrada.json", "r") as f:
+    with open(ENTRADA_FILE, "r") as f:
         datos = json.load(f)
         programas = [datos.get("programa", [])]
         nombre = datos.get("nombre", "")
 except Exception as e:
-    print("Error al leer entrada.json:", e)
+    print("Error al leer Entrada.json:", e)
+    programas = []
+    nombre = ""
 
 #Código de Ventana Arrastrable creado por James Kent
 class Grip:
@@ -114,11 +127,19 @@ def close():
     tiempo = f"{hours:02}:{minutes:02}:{seconds:02}"
 
     salida = {
-        "nombre": nombre,
+        "nombre": nombre.strip(),
         "tiempo": tiempo
     }
 
-    r = requests.post("http://192.168.18.27:5080/SaveTime", json=salida)
+    BASE_DIR = os.path.dirname(__file__)
+    COMMON_DIR = os.path.abspath(os.path.join(BASE_DIR, "common"))
+    SALIDA_FILE = os.path.join(COMMON_DIR, "salida.json")
+
+    try:
+        with open(SALIDA_FILE, "w") as f:
+            json.dump(salida, f)
+    except Exception as e:
+        print(f"No se pudo escribir salida.json: {e}")
 
 openTimer()
 # [!] Solo es necesario cambiar el color del label del tiempo, ya que abarca toda la ventana.

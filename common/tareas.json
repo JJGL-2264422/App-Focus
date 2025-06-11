@@ -1,0 +1,44 @@
+[
+      {
+            "nombre": "Programar",
+            "fecha": "2025-04-22",
+            "hora": "10:53:32",
+            "horaObj": "02:59:26",
+            "programa": "Code.exe"
+      },
+      {
+            "nombre": "PDf",
+            "fecha": "2025-04-22",
+            "hora": "10:53:50",
+            "horaObj": "02:59:52",
+            "programa": "Code.exe"
+      },
+      {
+            "nombre": "Escribir",
+            "fecha": "2025-04-22",
+            "hora": "11:35:08",
+            "horaObj": "02:59:42",
+            "programa": "Code.exe"
+      },
+      {
+            "nombre": "Leer",
+            "fecha": "2025-04-22",
+            "hora": "12:20:52",
+            "horaObj": "02:59:39",
+            "programa": "vivaldi.exe"
+      },
+      {
+            "nombre": "Revisar Codigo",
+            "fecha": "2025-04-22",
+            "hora": "13:04:00",
+            "horaObj": "6:00:00",
+            "programa": "code.exe"
+      },
+      {
+            "nombre": "Reportar",
+            "fecha": "2025-05-13",
+            "hora": "10:07:04",
+            "horaObj": "02:30:00",
+            "programa": "code.exe"
+      }
+]
