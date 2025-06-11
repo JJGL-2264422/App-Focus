@@ -7,6 +7,8 @@ import json
 import os
 import unicodedata
 
+import requests
+
 app = FastAPI()
 
 SECRET_KEY = "clave-secreta"
@@ -60,19 +62,14 @@ def add_tarea(tarea: Tarea, user: str = Depends(verify_token)):
         with open(TAREAS_FILE, "r") as f:
             tareas = json.load(f)
     tareas.append(tarea.dict())
-    datos = (tarea.nombre,tarea.fecha,tarea.hora,tarea.horaObj,tarea.programa)
-    try:
-        conn = mysql.connector.connect(host="localhost", user="root", password="", database="bd_focus_tareas")
-        cursor = conn.cursor()
-        cursor.execute("INSERT INTO tareas (nombre,fecha,hora,horaObj,programa) VALUES (%s,%s,%s,%s,%s)",(datos))
-        conn.commit()
-        conn.close()
-    except Exception as e:
-        return JSONResponse(status_code=401, content={"error": f"No se pudo realizar la operación: {e}"})
     
-    with open(TAREAS_FILE, "w") as f:
-        json.dump(tareas, f, indent=4)
-    return {"mensaje": "Tarea guardada"}
+    res = requests.post("http://localhost:8004/registro", json=tarea.dict())
+    if(res.ok):
+        with open(TAREAS_FILE, "w") as f:
+            json.dump(tareas, f, indent=4)
+        return {"mensaje": "Tarea guardada"}
+    else:
+        return JSONResponse(status_code=401, content={"error": "No se pudo realizar la operación."})
 
 @app.put("/tareas")
 def update_tareas(tareas: list[Tarea], user: str = Depends(verify_token)):

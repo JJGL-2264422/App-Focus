@@ -42,6 +42,15 @@ p_oauth = subprocess.Popen([
 procesos.append(p_oauth)
 time.sleep(1)
 
+print("Iniciando MySQL_service en el puerto 8004...")
+mysql_path = os.path.join(BASE_DIR, "MySQL_service")
+p_mysql = subprocess.Popen([
+    "uvicorn", "mysql_main:app",
+    "--port", "8004", "--reload"
+], cwd=mysql_path)
+procesos.append(p_mysql)
+time.sleep(1)
+
 print("\nEsperando a que los servicios arranquen...")
 time.sleep(3)
 

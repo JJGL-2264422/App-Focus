@@ -65,6 +65,7 @@ class FrameCrear(tk.Frame):
     def __init__(self, parent, controller, frame_lista):
         tk.Frame.__init__(self, parent, bg='#FAF5F0')
         self.frame_lista = frame_lista
+        self.controller = controller
         main_frame = tk.Frame(self, bg='#FAF5F0')
         main_frame.pack(pady=20, side='top', fill='both')
         main_frame.grid_rowconfigure(0, weight=1)
@@ -105,7 +106,7 @@ class FrameCrear(tk.Frame):
                 self.frame_lista.actualizar_ext()
                 messagebox.showinfo("Éxito", "Tarea guardada correctamente")
             else:
-                messagebox.showerror("Error", "No se pudo guardar la tarea")
+                messagebox.showerror("Error", f"No se pudo guardar la tarea.{r.json()}")
         tk.Button(input_frame, text="Crear Tarea", command=guardar_tarea).pack(pady=10)
     
         tabla_frame = tk.Frame(main_frame, bg='#FAF5F0')
@@ -186,7 +187,6 @@ class FrameLista(tk.Frame):
 
             self.controller.withdraw()
             subprocess.run([sys.executable, "cronometro.py"])
-            self.controller.deiconify()
 
             if os.path.exists(SALIDA_FILE):
                 with open(SALIDA_FILE, "r") as f:
@@ -204,6 +204,7 @@ class FrameLista(tk.Frame):
 
             else:
                 messagebox.showwarning("Aviso", "No se encontró el archivo salida.json después de cerrar el cronómetro.")
+            self.controller.deiconify()
 
         except Exception as e:
             messagebox.showerror("Error", f"No se pudo iniciar la tarea:\n{e}")
