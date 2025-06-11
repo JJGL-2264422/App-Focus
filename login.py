@@ -37,7 +37,8 @@ def registrar_usuario(user,password, repassword):
         messagebox.showwarning("Confirmar Contraseña", "Las contraseñas no concuerdan.")
         return
 
-    with open(DATA_FILE, 'r') as f:
+    #Código viejo - Dejar en caso de necesitar volver a JSON
+    ''' with open(DATA_FILE, 'r') as f:
         usuarios = json.load(f)
     
     if usuario in usuarios:
@@ -46,9 +47,14 @@ def registrar_usuario(user,password, repassword):
 
     usuarios[usuario] = contraseña
     with open(DATA_FILE, 'w') as f:
-        json.dump(usuarios, f)
+        json.dump(usuarios, f)'''
 
-    messagebox.showinfo("Éxito", "Usuario registrado exitosamente.")
+
+    response = requests.post(f"{API_URL}/signup", data={"username": user, "password": password})
+    if response.ok:
+        messagebox.showinfo("Éxito", "Usuario registrado exitosamente.")
+    else:
+        messagebox.showinfo("Error", f"No se pudo registrar el usuario. {response.json()}")
     return
 
 def iniciar_sesion(user, password):

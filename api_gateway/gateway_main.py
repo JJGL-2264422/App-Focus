@@ -14,6 +14,12 @@ async def login(request: Request):
     res = requests.post("http://localhost:8001/token", data=form)
     return JSONResponse(status_code=res.status_code, content=res.json())
 
+@app.post("/signup")
+async def login(request: Request):
+    form = await request.form()
+    res = requests.post("http://localhost:8001/signup", data=form)
+    return JSONResponse(status_code=res.status_code, content=res.json())
+
 @app.get("/Tareas")
 def get_tareas(request: Request):
     auth = request.headers.get("authorization")
