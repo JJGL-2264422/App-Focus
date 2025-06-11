@@ -1,5 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, Header
+from fastapi.responses import JSONResponse
 from jose import jwt, JWTError
+import mysql.connector
 from pydantic import BaseModel
 import json
 import os
@@ -58,6 +60,16 @@ def add_tarea(tarea: Tarea, user: str = Depends(verify_token)):
         with open(TAREAS_FILE, "r") as f:
             tareas = json.load(f)
     tareas.append(tarea.dict())
+    datos = (tarea.nombre,tarea.fecha,tarea.hora,tarea.horaObj,tarea.programa)
+    try:
+        conn = mysql.connector.connect(host="localhost", user="root", password="", database="bd_focus_tareas")
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO tareas (nombre,fecha,hora,horaObj,programa) VALUES (%s,%s,%s,%s,%s)",(datos))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        return JSONResponse(status_code=401, content={"error": f"No se pudo realizar la operación: {e}"})
+    
     with open(TAREAS_FILE, "w") as f:
         json.dump(tareas, f, indent=4)
     return {"mensaje": "Tarea guardada"}
@@ -87,6 +99,13 @@ def guardar_tiempo(t: Tiempo):
                 tiempo_nuevo = hhmmss_a_segundos(t.tiempo)
                 tiempo_restante = max(0, tiempo_anterior - tiempo_nuevo)
                 tarea["horaObj"] = segundos_a_hhmmss(tiempo_restante)
+
+                conn = mysql.connector.connect(host="localhost", user="root", password="", database="bd_focus_tareas")
+                cursor = conn.cursor()
+                cursor.execute("UPDATE tareas SET horaObj = %s WHERE nombre = %s",(segundos_a_hhmmss(tiempo_restante), nombre_tarea))
+                conn.commit()
+                conn.close()
+
                 actualizado = True
             except Exception as e:
                 return {"mensaje": f"Error al calcular tiempo restante: {e}"}
